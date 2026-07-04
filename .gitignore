@@ -1,0 +1,4 @@
+build/
+dist/
+PhotoWidget.xcodeproj/
+.DS_Store
