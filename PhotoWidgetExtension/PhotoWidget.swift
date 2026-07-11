@@ -30,7 +30,14 @@ struct PhotoEntity: AppEntity {
     static let typeDisplayRepresentation: TypeDisplayRepresentation = "Photo"
     static let defaultQuery = PhotoQuery()
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\((id as NSString).deletingPathExtension)")
+        let name = (id as NSString).deletingPathExtension
+        // Thumbnail takes priority over the filename in the picker row — files
+        // are already downscaled JPEGs, so no separate thumbnail pass needed.
+        guard let url = photosDir()?.appendingPathComponent(id),
+              let data = try? Data(contentsOf: url) else {
+            return DisplayRepresentation(title: "\(name)")
+        }
+        return DisplayRepresentation(title: "\(name)", image: .init(data: data))
     }
 }
 
@@ -56,20 +63,12 @@ enum FitMode: Int, AppEnum {
     ]
 }
 
-enum ColorMode: Int, AppEnum {
-    case fullColor = 0, tinted = 1
-    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Color"
-    static let caseDisplayRepresentations: [ColorMode: DisplayRepresentation] = [
-        .fullColor: "Always full color", .tinted: "Tint with system style",
-    ]
-}
-
 struct SelectPhotoIntent: WidgetConfigurationIntent {
     static let title: LocalizedStringResource = "Choose Photo"
     static let description = IntentDescription("Pick which photo this widget shows.")
     @Parameter(title: "Photo") var photo: PhotoEntity?
     @Parameter(title: "Scaling", default: .fill) var fit: FitMode
-    @Parameter(title: "Color", default: .fullColor) var color: ColorMode
+    @Parameter(title: "Always display in full color", default: false) var fullColor: Bool
 }
 
 // MARK: - Timeline
@@ -78,11 +77,11 @@ struct Entry: TimelineEntry {
     let date: Date
     let image: NSImage?
     let fit: FitMode
-    let color: ColorMode
+    let fullColor: Bool
 }
 
 struct Provider: AppIntentTimelineProvider {
-    func placeholder(in context: Context) -> Entry { Entry(date: .now, image: nil, fit: .fill, color: .fullColor) }
+    func placeholder(in context: Context) -> Entry { Entry(date: .now, image: nil, fit: .fill, fullColor: false) }
     func snapshot(for configuration: SelectPhotoIntent, in context: Context) async -> Entry {
         entry(for: configuration)
     }
@@ -97,7 +96,7 @@ struct Provider: AppIntentTimelineProvider {
         let url = name.flatMap { photosDir()?.appendingPathComponent($0) }
         let resolved = (url.flatMap { FileManager.default.fileExists(atPath: $0.path) ? $0 : nil })
             ?? listPhotoFiles().first
-        return Entry(date: .now, image: loadImage(resolved), fit: config.fit, color: config.color)
+        return Entry(date: .now, image: loadImage(resolved), fit: config.fit, fullColor: config.fullColor)
     }
 
     private func loadImage(_ url: URL?) -> NSImage? {
@@ -122,7 +121,7 @@ struct PhotoWidgetEntryView: View {
         let img = Image(nsImage: ns)
         if #available(macOS 15.0, *) {
             let mode: WidgetAccentedRenderingMode =
-                entry.color == .tinted ? .accentedDesaturated : .fullColor
+                entry.fullColor ? .fullColor : .accentedDesaturated
             return AnyView(img.resizable().widgetAccentedRenderingMode(mode))
         }
         return AnyView(img.resizable())
