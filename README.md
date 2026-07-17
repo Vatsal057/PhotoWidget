@@ -7,9 +7,16 @@ Put your own photos on the macOS desktop as widgets.
 | ![App](docs/app.png) | ![Widget](docs/widget.png) |
 
 - Add any number of photos (click **Add photos** or drag & drop; multi-select works)
+- **Crop on import** — a crop box appears for every photo you add, so the part
+  you care about is what the widget shows (or click **Use Full Image** to skip)
+- **Albums** — create albums in the sidebar and organize photos by dragging
+  them onto an album (drag from Finder onto an album works too)
 - Place as many Photo Widgets as you like — small, medium, large, extra large
-- Right-click a widget → **Edit Widget** to pick a photo *by name*, choose
-  **Fill** or **Fit** scaling, and **Always full color** vs **Tint with system style**
+- Each widget can show **one photo** or **shuffle through an album** — so
+  different widgets can show different photo sets
+- Right-click a widget → **Edit Widget** to pick a photo (grouped by album),
+  or pick a **Shuffle Album** and how often it changes (15 min – 1 day),
+  plus **Fill/Fit** scaling and **Always full color** vs **Tint with system style**
 - Photos render in full color even when macOS widget style is Monochrome
 
 ## Install
@@ -20,9 +27,11 @@ Put your own photos on the macOS desktop as widgets.
    with a personal development certificate, not notarized by Apple, so plain
    double-click is blocked. On macOS 15+ you may instead need to allow it
    under **System Settings → Privacy & Security → Open Anyway**.)
-4. Add some photos in the app.
-5. Right-click the desktop → **Edit Widgets…** → search "PhotoWidget" → add it.
-6. Right-click the widget → **Edit Widget** to choose which photo it shows.
+4. Add some photos in the app — crop each one as it comes in, or use it whole.
+5. Optional: click **New Album** and drag photos onto it to organize them.
+6. Right-click the desktop → **Edit Widgets…** → search "PhotoWidget" → add it.
+7. Right-click the widget → **Edit Widget** to choose a single photo, or set
+   **Shuffle Album** to rotate through an album automatically.
 
 Requires macOS 14 (Sonoma) or newer. Widgets show in full color when
 System Settings → Desktop & Dock → Widgets → Style is "Full colour";
@@ -31,10 +40,12 @@ you pick "Tint with system style" per widget.
 
 ## How it works
 
-Two targets: a SwiftUI app and a WidgetKit extension. The app downscales each
-photo to JPEG and stores it in a shared App Group container; the widget's
-`AppIntentConfiguration` lists those files by name in the Edit Widget picker
-and renders the chosen one. The app pushes `reloadAllTimelines()` whenever the
+Two targets: a SwiftUI app and a WidgetKit extension. The app crops (if asked),
+downscales each photo to JPEG, and stores it in a shared App Group container —
+albums are just subfolders, so the filesystem is the database. The widget's
+`AppIntentConfiguration` lists those files (grouped by album) in the Edit
+Widget picker; in shuffle mode it builds a randomized timeline from the album
+at the chosen interval. The app pushes `reloadAllTimelines()` whenever the
 library changes.
 
 ## Build from source
