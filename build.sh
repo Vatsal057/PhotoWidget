@@ -4,3 +4,5 @@
 # extension instead of showing a stale/blank cached instance.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel 2>/dev/null || echo "$PWD")"
+scripts/driver.sh build
+scripts/driver.sh reload

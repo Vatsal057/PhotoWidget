@@ -2,3 +2,4 @@ build/
 dist/
 PhotoWidget.xcodeproj/
 .DS_Store
+scripts/shots/
