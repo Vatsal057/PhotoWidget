@@ -51,10 +51,15 @@ app.build_configurations.each do |bc|
     'PRODUCT_BUNDLE_IDENTIFIER' => PREFIX,
     'CODE_SIGN_ENTITLEMENTS' => 'PhotoWidget/PhotoWidget.entitlements',
     'INFOPLIST_KEY_NSHumanReadableCopyright' => '',
-    'INFOPLIST_KEY_LSApplicationCategoryType' => 'public.app-category.utilities')
+    'INFOPLIST_KEY_LSApplicationCategoryType' => 'public.app-category.utilities',
+    'ASSETCATALOG_COMPILER_APPICON_NAME' => 'AppIcon',
+    # xcodeproj defaults this to AccentColor; we ship no such colorset.
+    'ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME' => '')
 end
 app_group = project.new_group('PhotoWidget', 'PhotoWidget')
 app.add_file_references([app_group.new_reference('PhotoWidgetApp.swift')])
+# Asset catalog goes in Resources, not the Sources phase.
+app.add_resources([app_group.new_reference('Assets.xcassets')])
 
 # --- Embed the appex into the app's PlugIns ---
 app.add_dependency(ext)
